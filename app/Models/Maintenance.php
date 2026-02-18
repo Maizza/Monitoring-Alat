@@ -12,9 +12,10 @@ class Maintenance extends Model
     protected $fillable = [
         'comment_id',
         'status_kerja',
-        'photo_maintenance', // WAJIB TAMBAHIN INI
+        'content',            // WAJIB ADA
+        'photo_maintenance',
+        'voice_note'          // WAJIB ADA
     ];
-
     public function comment()
     {
         return $this->belongsTo(Comment::class);

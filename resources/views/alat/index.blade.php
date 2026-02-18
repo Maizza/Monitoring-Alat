@@ -9,11 +9,6 @@
             <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Manajemen Alat</h1>
             <p class="text-slate-500 italic text-sm">Kelola inventaris perangkat Raffa CCTV</p>
         </div>
-        
-        <a href="#form-create" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center text-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Tambah Alat
-        </a>
     </div>
 
     @if(session('success'))
