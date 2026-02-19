@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
-use App\Models\Maintenance; // Pastikan model Maintenance di-import agar tidak error 500
+use App\Models\User; // Tambahkan ini
+use App\Mail\ReportMasukMail; // Tambahkan ini
+use Illuminate\Support\Facades\Mail; // Tambahkan ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
@@ -16,16 +18,12 @@ class CommentController extends Controller
      */
     public function index(): JsonResponse
     {
-        // 1. Ambil data user yang sedang login
         $user = auth()->user();
 
-        // 2. Logic Filter Privasi & Eager Loading:
-        // Tambahkan 'maintenances' agar foto perbaikan terkirim ke Flutter
+        // Logic Filter Privasi & Eager Loading
         if ($user->role == 'supervisor' || $user->role == 'mekanik') {
             $comments = Comment::with(['alat', 'user', 'maintenances'])->latest()->get();
         } else {
-            // KUNCI PRIVASI: User biasa HANYA bisa liat laporannya sendiri
-            // Tetap panggil 'maintenances' agar user bisa liat hasil kerja mekanik
             $comments = Comment::with(['alat', 'user', 'maintenances'])
                 ->where('user_id', $user->id)
                 ->latest()
@@ -56,11 +54,7 @@ class CommentController extends Controller
         $comment->user_id = auth()->id();
         $comment->alat_id = $request->alat_id;
         $comment->content = $request->input('content');
-
-        // --- KUNCI STATUS DEFAULT ---
-        // Setiap laporan baru wajib 'pending' agar muncul di Tab User & Repair
         $comment->status = 'pending';
-
         $comment->unique_code = 'REP-' . strtoupper(Str::random(8));
 
         if ($request->hasFile('voice_note')) {
@@ -77,10 +71,24 @@ class CommentController extends Controller
 
         $comment->save();
 
+        // --- FITUR BARU: NOTIFIKASI EMAIL KE MEKANIK ---
+        try {
+            // Ambil semua email user yang punya role mekanik
+            $emailsMekanik = User::where('role', 'mekanik')->pluck('email');
+
+            if ($emailsMekanik->isNotEmpty()) {
+                // Pastikan lu udah buat file ReportMasukMail pake php artisan ya!
+                Mail::to($emailsMekanik)->send(new ReportMasukMail($comment->load('alat', 'user')));
+            }
+        } catch (\Exception $e) {
+            // Kita pake try-catch biar kalau email gagal dikirim (misal sinyal server bapuk), 
+            // laporannya tetep kesimpen di database.
+            \Log::error("Gagal kirim email: " . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Laporan shift berhasil tersimpan!',
-            // Load 'maintenances' juga saat store agar struktur data konsisten
+            'message' => 'Laporan shift berhasil tersimpan dan notifikasi terkirim!',
             'data' => $comment->load(['alat', 'user', 'maintenances']) 
         ], 201);
     }
