@@ -39,7 +39,7 @@
                 <div>
                     <label
                         class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Email</label>
-                    <input type="email" name="email" placeholder="user@raffa.com"
+                    <input type="email" name="email" placeholder="user@example.com"
                         class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
                         required>
                 </div>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - Raffa CCTV')
+@section('title', 'Dashboard - PAO System')
 
 @section('content')
 <div class="space-y-8">

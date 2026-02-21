@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Alat - Raffa CCTV')
+@section('title', 'Edit Alat - PAO System')
 
 @section('content')
 <div class="max-w-4xl mx-auto">

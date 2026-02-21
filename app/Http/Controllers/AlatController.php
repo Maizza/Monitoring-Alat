@@ -1,26 +1,22 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Alat;
 use Illuminate\Http\Request;
 
 class AlatController extends Controller
 {
-    // Menghapus data alat
-    public function destroy(Alat $alat)
-    {
-        $alat->delete();
-        return back()->with('success', 'Alat berhasil dihapus!');
-    }
-
-    // Opsional: Untuk pencarian di index
     public function index(Request $request)
     {
+        // Pake query builder biar lebih clean
         $query = Alat::latest();
 
-        if ($request->has('search')) {
-            $query->where('nama_alat', 'like', '%' . $request->search . '%')
-                ->orWhere('serial_number', 'like', '%' . $request->search . '%');
+        if ($request->filled('search')) { // filled() lebih aman drpada has() buat input kosong
+            $query->where(function($q) use ($request) {
+                $q->where('nama_alat', 'like', '%' . $request->search . '%')
+                  ->orWhere('serial_number', 'like', '%' . $request->search . '%');
+            });
         }
 
         $alats = $query->get();
@@ -29,9 +25,10 @@ class AlatController extends Controller
 
     public function store(Request $request)
     {
+        // Tambahin validasi tipe data biar makin aman
         $data = $request->validate([
-            'nama_alat' => 'required',
-            'serial_number' => 'required|unique:alats',
+            'nama_alat' => 'required|string|max:255',
+            'serial_number' => 'required|string|unique:alats,serial_number',
         ]);
 
         Alat::create($data);
@@ -43,23 +40,21 @@ class AlatController extends Controller
         return view('alat.edit', compact('alat'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Alat $alat) // Pake Type Hinting biar gak perlu findOrFail lagi
     {
-        // 1. Validasi: Hapus 'status' dari validasi karena sudah tidak diinput manual
         $request->validate([
             'nama_alat' => 'required|string|max:255',
-            'serial_number' => 'required|string|max:255|unique:alats,serial_number,' . $id,
+            'serial_number' => 'required|string|max:255|unique:alats,serial_number,' . $alat->id,
         ]);
 
-        $alat = \App\Models\Alat::findOrFail($id);
-
-        // 2. Update field yang ada saja
-        $alat->update([
-            'nama_alat' => $request->nama_alat,
-            'serial_number' => $request->serial_number,
-            // Status JANGAN dimasukkan di sini biar gak keganti jadi kosong
-        ]);
+        $alat->update($request->only(['nama_alat', 'serial_number']));
 
         return redirect()->route('alat.index')->with('success', 'Data perangkat berhasil diperbarui!');
+    }
+
+    public function destroy(Alat $alat)
+    {
+        $alat->delete();
+        return back()->with('success', 'Alat berhasil dihapus!');
     }
 }

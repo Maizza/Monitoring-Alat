@@ -3,7 +3,7 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueue; // Wajib buat kirim cepat
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -23,6 +23,7 @@ class RepairSelesaiMail extends Mailable implements ShouldQueue
      */
     public function __construct($maintenance, $comment)
     {
+        // SerializesModels akan otomatis mengubah objek model menjadi ID saat masuk antrean
         $this->maintenance = $maintenance;
         $this->comment = $comment;
     }
@@ -34,18 +35,18 @@ class RepairSelesaiMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Update Perbaikan Alat: ' . ($this->comment->alat->nama_alat ?? 'Alat Anda'),
+            subject: '🔔 Update Perbaikan: ' . ($this->comment->alat->nama_alat ?? 'Alat Monitoring'),
         );
     }
 
     /**
      * Get the message content definition.
-     * Mengarahkan ke file HTML (blade) yang sudah kita buat tadi
+     * Mengarahkan ke file HTML (blade) yang sudah kita buat
      */
     public function content(): Content
     {
         return new Content(
-            view: 'emails.repair_selesai', // Pastikan filenya ada di resources/views/emails/repair_selesai.blade.php
+            view: 'emails.repair_selesai',
         );
     }
 
