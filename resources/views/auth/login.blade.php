@@ -30,7 +30,7 @@
             
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">Email Address</label>
-                <input type="email" name="email" placeholder="contoh@maizza.com" 
+                <input type="email" name="email" placeholder="contoh@example.com" 
                     class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all duration-300 placeholder:text-slate-400" required>
             </div>
 
