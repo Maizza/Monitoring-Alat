@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen User - RaffaCCTV')
+@section('title', 'Manajemen User - PAO System')
 
 @section('content')
     <div class="space-y-8">
