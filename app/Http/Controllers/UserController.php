@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Mail\AkunBaruMail; // Panggil Mailable yang baru kita buat
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail; // Pastikan ini ada untuk kirim email
 
 class UserController extends Controller
 {
@@ -24,19 +26,34 @@ class UserController extends Controller
         return view('user.index', compact('users'));
     }
 
+    /**
+     * Daftarkan User Baru & Kirim Email Notifikasi
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role' => 'required|in:supervisor,user,mekanik', // Validasi role 
+            'role' => 'required|in:supervisor,user,mekanik', 
         ]);
 
         $data['password'] = Hash::make($request->password);
-        User::create($data);
+        
+        // Simpan ke database
+        $user = User::create($data);
 
-        return back()->with('success', 'User ' . $request->name . ' berhasil didaftarkan!');
+        // --- TRIGGER EMAIL NOTIFIKASI (START) ---
+        try {
+            // Kirim notifikasi tanpa password untuk keamanan
+            Mail::to($user->email)->send(new AkunBaruMail($user));
+        } catch (\Exception $e) {
+            // Log jika email gagal agar proses pendaftaran tetap lanjut
+            \Log::error("Gagal kirim email akun baru: " . $e->getMessage());
+        }
+        // --- TRIGGER EMAIL NOTIFIKASI (END) ---
+
+        return back()->with('success', 'User ' . $request->name . ' berhasil didaftarkan dan notifikasi email terkirim!');
     }
 
     public function destroy(User $user)
