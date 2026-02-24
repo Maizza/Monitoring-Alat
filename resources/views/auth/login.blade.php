@@ -15,7 +15,7 @@
                 </svg>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Sign In</h1>
-            <p class="text-slate-400 mt-2 font-medium">Silakan masuk ke sistem PT. Pilar Artha Oetama</p>
+            <p class="text-slate-400 mt-2 font-medium">PT. Pilar Artha Oetama</p>
         </div>
 
         @if(session()->has('loginError'))
