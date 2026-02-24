@@ -53,7 +53,7 @@ class UserController extends Controller
         }
         // --- TRIGGER EMAIL NOTIFIKASI (END) ---
 
-        return back()->with('success', 'User ' . $request->name . ' berhasil didaftarkan dan notifikasi email terkirim!');
+        return back()->with('success', 'Account ' . $request->name . ' berhasil didaftarkan dan notifikasi email terkirim!');
     }
 
     public function destroy(User $user)
