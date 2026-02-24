@@ -15,7 +15,7 @@
                 </svg>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Sign In</h1>
-            <p class="text-slate-400 mt-2 font-medium">Silakan masuk ke sistem Raffa CCTV</p>
+            <p class="text-slate-400 mt-2 font-medium">Silakan masuk ke sistem PT. Pilar Artha Oetama</p>
         </div>
 
         @if(session()->has('loginError'))
@@ -53,7 +53,7 @@
         </form>
 
         <div class="mt-10 pt-6 border-t border-slate-50 text-center">
-            <p class="text-sm text-slate-400 italic">Dikelola oleh <span class="font-bold text-slate-600">PT.Raffa CCTV</span></p>
+            <p class="text-sm text-slate-400 italic">Dikelola oleh <span class="font-bold text-slate-600">PT.Pilar Artha Oetama</span></p>
         </div>
     </div>
 </div>
