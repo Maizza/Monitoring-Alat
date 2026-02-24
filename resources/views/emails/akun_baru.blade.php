@@ -11,7 +11,7 @@
             <p style="margin: 5px 0 0;"><strong>Email:</strong> {{ $user->email }}</p>
         </div>
 
-        <p>Silakan gunakan email di atas untuk masuk ke aplikasi Monitoring Monitoring (Flutter) atau Dashboard Web.</p>
+        <p>Silakan gunakan email di atas untuk masuk ke aplikasi Monitoring Alat PAO.</p>
         <p>Password Anda telah ditentukan secara internal. Jika Anda belum mengetahuinya, silakan hubungi Admin langsung.</p>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
