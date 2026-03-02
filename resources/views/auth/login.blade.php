@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login - PAO Monitoring')
+@section('title', 'Login - Monitoring Alat')
 
 @section('content')
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen User - PAO System')
+@section('title', 'Manajemen User - Monitoring Alat')
 
 @section('content')
     <div class="space-y-8">
