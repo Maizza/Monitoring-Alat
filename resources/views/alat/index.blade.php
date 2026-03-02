@@ -7,7 +7,7 @@
     <div class="flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Manajemen Alat</h1>
-            <p class="text-slate-500 italic text-sm">Kelola inventaris perangkat Raffa CCTV</p>
+            <p class="text-slate-500 italic text-sm">Kelola inventaris perangkat Monitoring Alat</p>
         </div>
     </div>
 
