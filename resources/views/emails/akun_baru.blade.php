@@ -3,7 +3,7 @@
 <body style="font-family: sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
         <h2 style="color: #2563eb;">Halo, {{ $user->name }}!</h2>
-        <p>Kami informasikan bahwa akun Anda telah berhasil didaftarkan di <strong>PAO System</strong> oleh Administrator.</p>
+        <p>Kami informasikan bahwa akun Anda telah berhasil didaftarkan di <strong>Monitoring Alat PAO</strong> oleh Administrator.</p>
         
         <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0;"><strong>Identitas Akun:</strong></p>
