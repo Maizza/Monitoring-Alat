@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
-use App\Models\User; // Tambahkan ini
-use App\Mail\ReportMasukMail; // Tambahkan ini
-use Illuminate\Support\Facades\Mail; // Tambahkan ini
+use App\Models\User; 
+use App\Mail\ReportMasukMail; 
+use Illuminate\Support\Facades\Mail; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
@@ -20,11 +20,13 @@ class CommentController extends Controller
     {
         $user = auth()->user();
 
-        // Logic Filter Privasi & Eager Loading
+        // FIX: Tambahkan 'maintenances.user' agar nama mekanik ikut terkirim
+        $relations = ['alat', 'user', 'maintenances.user'];
+
         if ($user->role == 'supervisor' || $user->role == 'mekanik') {
-            $comments = Comment::with(['alat', 'user', 'maintenances'])->latest()->get();
+            $comments = Comment::with($relations)->latest()->get();
         } else {
-            $comments = Comment::with(['alat', 'user', 'maintenances'])
+            $comments = Comment::with($relations)
                 ->where('user_id', $user->id)
                 ->latest()
                 ->get();
@@ -71,25 +73,22 @@ class CommentController extends Controller
 
         $comment->save();
 
-        // --- FITUR BARU: NOTIFIKASI EMAIL KE MEKANIK ---
+        // NOTIFIKASI EMAIL
         try {
-            // Ambil semua email user yang punya role mekanik
             $emailsMekanik = User::where('role', 'mekanik')->pluck('email');
-
             if ($emailsMekanik->isNotEmpty()) {
-                // Pastikan lu udah buat file ReportMasukMail pake php artisan ya!
+                // Pastikan Mail class ReportMasukMail menggunakan ShouldQueue agar tidak delay
                 Mail::to($emailsMekanik)->send(new ReportMasukMail($comment->load('alat', 'user')));
             }
         } catch (\Exception $e) {
-            // Kita pake try-catch biar kalau email gagal dikirim (misal sinyal server bapuk), 
-            // laporannya tetep kesimpen di database.
             \Log::error("Gagal kirim email: " . $e->getMessage());
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Laporan shift berhasil tersimpan dan notifikasi terkirim!',
-            'data' => $comment->load(['alat', 'user', 'maintenances']) 
+            'message' => 'Laporan shift berhasil tersimpan!',
+            // FIX: Tambahkan 'maintenances.user' juga di response return
+            'data' => $comment->load(['alat', 'user', 'maintenances.user']) 
         ], 201);
     }
 }
