@@ -9,13 +9,12 @@ use App\Mail\RepairSelesaiMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB; // Tambahkan ini
+use Illuminate\Support\Facades\DB;
 
 class MaintenanceController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        // 1. Validasi input
         $request->validate([
             'comment_id'        => 'required|exists:comments,id',
             'status_kerja'      => 'required',
@@ -24,27 +23,27 @@ class MaintenanceController extends Controller
             'voice_note'        => 'nullable|file|max:15000', 
         ]);
 
-        // --- PROTEKSI ANTI-DUPLIKAT (START) ---
-        // Cek apakah laporan ini sudah pernah di-submit sebelumnya
         $existing = Maintenance::where('comment_id', $request->comment_id)
                                 ->where('status_kerja', $request->status_kerja)
-                                ->where('created_at', '>=', now()->subSeconds(30)) // Cek dalam 30 detik terakhir
+                                ->where('created_at', '>=', now()->subSeconds(10)) 
                                 ->first();
 
         if ($existing) {
             return response()->json([
                 'success' => false,
-                'message' => 'Laporan ini sudah terkirim, mohon tunggu sebentar.'
+                'message' => 'Laporan duplikat terdeteksi.'
             ], 422);
         }
-        // --- PROTEKSI ANTI-DUPLIKAT (END) ---
 
-        // Pake DB Transaction biar kalau email gagal, data database tetap konsisten
         return DB::transaction(function () use ($request) {
             $maintenance = new Maintenance();
             $maintenance->comment_id   = $request->comment_id;
             $maintenance->status_kerja = $request->status_kerja;
             $maintenance->content      = $request->input('content'); 
+            
+            // FIX 1: SIMPAN USER ID (MEKANIK)
+            // Tanpa ini, relasi user di Flutter bakal null dan nampilin "Mekanik Terhapus"
+            $maintenance->user_id      = auth()->id(); 
 
             if ($request->hasFile('photo_maintenance')) {
                 $path = $request->file('photo_maintenance')->store('uploads/maintenance', 'public');
@@ -61,8 +60,9 @@ class MaintenanceController extends Controller
             $comment = Comment::with('user', 'alat')->find($request->comment_id);
             
             if ($comment) {
-                $newStatus = ($request->status_kerja == 'DONE') ? 'DONE' : 'Preventive';
-                $comment->update(['status' => $newStatus]);
+                // FIX 2: LOGIKA UPDATE STATUS INDUK
+                // Lu pakai status_kerja yang dikirim dari Flutter langsung biar fleksibel
+                $comment->update(['status' => $request->status_kerja]);
 
                 try {
                     $emailUser = $comment->user->email;
@@ -77,7 +77,8 @@ class MaintenanceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Data perbaikan berhasil disimpan!',
-                'data'    => $maintenance
+                // Load user biar Flutter dapet nama mekanik secara real-time
+                'data'    => $maintenance->load('user')
             ], 201);
         });
     }
