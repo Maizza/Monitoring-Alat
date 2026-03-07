@@ -17,12 +17,18 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // Kunci akses: Hanya email dari AdminSeeder yang boleh login
+        if ($credentials['email'] !== 'admin@gmail.com') {
+            return back()->with('loginError', 'Akses Ditolak! Hanya akun Administrator utama yang diizinkan.');
+        }
+
+        // Coba login jika email cocok
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended('dashboard');
         }
 
-        return back()->with('loginError', 'Email atau password salah!');
+        return back()->with('loginError', 'Password salah!');
     }
 
     public function logout(Request $request) {
