@@ -25,7 +25,7 @@ class AkunBaruMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Notifikasi Akun PAO System: ' . $this->user->name,
+            subject: 'Notifikasi Akun Monitoring Alat Refinol: ' . $this->user->name,
         );
     }
 
