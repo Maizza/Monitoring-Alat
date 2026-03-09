@@ -11,11 +11,19 @@ class Maintenance extends Model
 
     protected $fillable = [
         'comment_id',
+        'user_id',       // <--- INI WAJIB ADA BIAR GAK GAGAL ONLINE!
         'status_kerja',
-        'content',            // WAJIB ADA
+        'content',
         'photo_maintenance',
-        'voice_note'          // WAJIB ADA
+        'voice_note'
     ];
+
+    // Relasi ke User (Mekanik) biar namanya bisa kebaca di Flutter
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function comment()
     {
         return $this->belongsTo(Comment::class);
