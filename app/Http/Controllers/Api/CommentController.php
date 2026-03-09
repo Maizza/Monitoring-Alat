@@ -10,25 +10,19 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB; // Tambahkan ini untuk kestabilan data
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
-    /**
-     * Menampilkan daftar laporan dengan filter privasi
-     */
     public function index(): JsonResponse
     {
         $user = auth()->user();
-
-        // Eager Loading sampai ke level user mekanik
         $relations = ['alat', 'user', 'maintenances.user'];
 
-        // Mekanik & Supervisor HARUS liat semua laporan agar bisa kerja
         if ($user->role == 'supervisor' || $user->role == 'mekanik') {
             $comments = Comment::with($relations)->latest()->get();
         } else {
-            // Operator biasa cuma liat laporan dia sendiri
             $comments = Comment::with($relations)
                 ->where('user_id', $user->id)
                 ->latest()
@@ -42,9 +36,6 @@ class CommentController extends Controller
         ], 200);
     }
 
-    /**
-     * Menyimpan laporan baru dari sisi User (Operator)
-     */
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -55,13 +46,26 @@ class CommentController extends Controller
             'video' => 'nullable|mimes:mp4,mov,avi|max:20480',
         ]);
 
-        // Gunakan Transaction biar data aman & gak nanggung kalau ada error sinyal
+        // --- PROTEKSI ANTI DUPLIKAT (SATPAM SERVER) ---
+        // Cek apakah user yang sama mengirim laporan untuk alat yang sama dalam 10 detik terakhir
+        $existing = Comment::where('user_id', auth()->id())
+            ->where('alat_id', $request->alat_id)
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sabar King, laporan sebelumnya sedang diproses server!'
+            ], 422); // Error 422: Unprocessable Content
+        }
+
         return DB::transaction(function () use ($request) {
             $comment = new Comment();
             $comment->user_id = auth()->id();
             $comment->alat_id = $request->alat_id;
             $comment->content = $request->input('content');
-            $comment->status = 'pending'; // Status awal masuk tab Repair
+            $comment->status = 'pending'; 
             $comment->unique_code = 'REP-' . strtoupper(Str::random(8));
 
             if ($request->hasFile('voice_note')) {
@@ -78,21 +82,18 @@ class CommentController extends Controller
 
             $comment->save();
 
-            // NOTIFIKASI EMAIL KE MEKANIK
-            // Pakai try-catch agar kalau email error, simpan data TETAP sukses
             try {
                 $emailsMekanik = User::where('role', 'mekanik')->pluck('email');
                 if ($emailsMekanik->isNotEmpty()) {
                     Mail::to($emailsMekanik)->send(new ReportMasukMail($comment->load('alat', 'user')));
                 }
             } catch (\Exception $e) {
-                \Log::error("Email Error: " . $e->getMessage());
+                Log::error("Email Error: " . $e->getMessage());
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan shift berhasil tersimpan!',
-                // Pastikan return data punya relasi lengkap agar UI Flutter langsung update
                 'data' => $comment->load(['alat', 'user', 'maintenances.user']) 
             ], 201);
         });
