@@ -15,14 +15,17 @@ class MaintenanceController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        // PERBAIKAN VALIDASI: Tambahkan mimes biar server gak nolak file dari HP
         $request->validate([
             'comment_id'        => 'required|exists:comments,id',
             'status_kerja'      => 'required',
             'content'           => 'nullable|string', 
-            'photo_maintenance' => 'nullable|image|max:5120',
-            'voice_note'        => 'nullable|file|max:15000', 
+            'photo_maintenance' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            // Tambahin mimes mp4 karena .m4a sering kedeteksi sebagai mp4 audio
+            'voice_note'        => 'nullable|file|mimes:mp3,wav,m4a,mp4,aac|max:15000', 
         ]);
 
+        // Proteksi Duplikat (Udah bener)
         $existing = Maintenance::where('comment_id', $request->comment_id)
                                 ->where('status_kerja', $request->status_kerja)
                                 ->where('created_at', '>=', now()->subSeconds(10)) 
@@ -41,8 +44,7 @@ class MaintenanceController extends Controller
             $maintenance->status_kerja = $request->status_kerja;
             $maintenance->content      = $request->input('content'); 
             
-            // FIX 1: SIMPAN USER ID (MEKANIK)
-            // Tanpa ini, relasi user di Flutter bakal null dan nampilin "Mekanik Terhapus"
+            // Fix: Catat siapa yang login (Mekanik)
             $maintenance->user_id      = auth()->id(); 
 
             if ($request->hasFile('photo_maintenance')) {
@@ -60,13 +62,13 @@ class MaintenanceController extends Controller
             $comment = Comment::with('user', 'alat')->find($request->comment_id);
             
             if ($comment) {
-                // FIX 2: LOGIKA UPDATE STATUS INDUK
-                // Lu pakai status_kerja yang dikirim dari Flutter langsung biar fleksibel
+                // Update status induk (pending -> PROSES/DONE)
                 $comment->update(['status' => $request->status_kerja]);
 
                 try {
                     $emailUser = $comment->user->email;
                     if ($emailUser) {
+                        // Pastikan Mail diproses secara Queue jika memungkinkan agar tidak lambat
                         Mail::to($emailUser)->send(new RepairSelesaiMail($maintenance, $comment));
                     }
                 } catch (\Exception $e) {
@@ -77,7 +79,6 @@ class MaintenanceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Data perbaikan berhasil disimpan!',
-                // Load user biar Flutter dapet nama mekanik secara real-time
                 'data'    => $maintenance->load('user')
             ], 201);
         });
